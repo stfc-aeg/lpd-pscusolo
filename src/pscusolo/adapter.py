@@ -11,6 +11,7 @@ from odin.adapters.adapter import ApiAdapter, ApiAdapterResponse, request_types,
 from odin.adapters.parameter_tree import ParameterTreeError
 from odin.util import decode_request_body
 
+from pscusolo.controller import PSCUSoloController
 
 class PSCUSoloAdapter(ApiAdapter):
     """Main adapter class for the Hxtleak adapter."""
@@ -27,7 +28,7 @@ class PSCUSoloAdapter(ApiAdapter):
         # Parse options
         #port_name = str(self.options.get('port_name', '/dev/ttyACM0'))
 
-        #self.controller = HxtleakController(port_name)
+        self.controller = PSCUSoloController()
 
         logging.debug("PSCUSoloAdapter loaded")
 
@@ -42,7 +43,7 @@ class PSCUSoloAdapter(ApiAdapter):
         :return: an ApiAdapterResponse object containing the appropriate response
         """
         try:
-            response = {"response": "GET request"} #self.controller.get(path)
+            response = self.controller.get(path)
             status_code = 200
         except (ParameterTreeError) as e:
             response = {'error': str(e)}
@@ -68,7 +69,7 @@ class PSCUSoloAdapter(ApiAdapter):
 
         try:
             data = decode_request_body(request)
-            response = {"response": "PUT request"}  #self.controller.set(path, data)
+            response = self.controller.set(path, data)
             status_code = 200
         except (ParameterTreeError) as e:
             response = {'error': str(e)}
