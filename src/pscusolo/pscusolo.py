@@ -35,7 +35,7 @@ def humid_raw_adc(adc_val):
 
 def leak_adc(adc_val):
 
-    leak = ((adc_val / 4095.)*5)
+    leak = ((adc_val / 4095.)*5)/ 150e-3
     return leak
 
 class PSCUSolo():
@@ -65,7 +65,7 @@ class PSCUSolo():
         "pump_latched": (1, 2),
         "temp_latched": (1, 3),
         "leak_trace": (1, 4),
-        "arm": (1, 5),
+        "armed": (1, 5),
         "temp1_over": (2, 0),
         "temp1_under": (2, 1),
         "humid_over": (2, 2),
@@ -75,8 +75,8 @@ class PSCUSolo():
     }
 
     OUTPUT_PINS = {
-        "DISARM": (0, 5),
-        "ARM": (0, 6),
+        "disarm": (0, 5),
+        "arm": (0, 6),
     }
 
     def __init__(self):
@@ -161,7 +161,7 @@ class PSCUSolo():
 
     def update(self):
 
-        self.armed = self.read_gpio("arm")
+        self.armed = self.read_gpio("armed")
         self.tripped = not self.read_gpio("tripped")
 
         self.update_temp()
@@ -233,12 +233,12 @@ class PSCUSolo():
 
     def set_armed(self, arm):
 
-        pin = "ARM" if arm else "DISARM"
+        pin = "arm" if arm else "disarm"
         self.write_gpio(pin, MCP23008.LOW)
         self.write_gpio(pin, MCP23008.HIGH)
         self.write_gpio(pin, MCP23008.LOW)
 
-        self.armed = self.read_gpio("arm")
+        self.armed = self.read_gpio("armed")
 
 
 
