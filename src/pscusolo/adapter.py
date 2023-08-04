@@ -1,7 +1,6 @@
-"""odin-control adapter for the HEXITEC leak detector system.
+"""odin-control adapter for the LPD PSCUSolo system.
 
-This class initialises the adapter which sets the port name and creates
-the controller object, and handles HTTP requests to the adapter.
+This class implements the odin-control adapter for the PSCUSolo system.
 
 Tim Nicholls & Harvey Wornham, STFC Detector Systems Software Group
 """
@@ -12,6 +11,7 @@ from odin.adapters.parameter_tree import ParameterTreeError
 from odin.util import decode_request_body
 
 from pscusolo.controller import PSCUSoloController
+
 
 class PSCUSoloAdapter(ApiAdapter):
     """Main adapter class for the Hxtleak adapter."""
@@ -26,7 +26,7 @@ class PSCUSoloAdapter(ApiAdapter):
         super().__init__(**kwargs)
 
         # Parse options
-        #port_name = str(self.options.get('port_name', '/dev/ttyACM0'))
+        # port_name = str(self.options.get('port_name', '/dev/ttyACM0'))
 
         self.controller = PSCUSoloController()
 
@@ -86,4 +86,4 @@ class PSCUSoloAdapter(ApiAdapter):
         correctly.
         """
         logging.debug("Cleanup called")
-        #self.controller.cleanup()
+        # self.controller.cleanup()

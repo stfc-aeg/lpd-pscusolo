@@ -1,20 +1,31 @@
+"""Controller for the Power Supply Control Unit Solo.
+
+this script deffines a class so that JSON can take data
+directly from the beagle and send it to the PSUCsolo web
+inteface.
+
+Harvey Wornham, STFC Detector Systems Software Group
+"""
 import logging
 
-from tornado.ioloop import IOLoop, PeriodicCallback
+from tornado.ioloop import PeriodicCallback
 
-from odin_devices.mcp23008 import MCP23008
 from odin.adapters.parameter_tree import ParameterTree
 from pscusolo.pscusolo import PSCUSolo
 
+
 class PSCUSoloController():
+    """generates and updates the parameter tree."""
 
     def __init__(self):
+        """Initalises the logging.debug command."""
         logging.debug("initalising PSCUsolo control unit ")
 
-        self.pscu = PSCUSolo() #creates a concreate object from class PSCUSolo
-
-        self.param_tree = ParameterTree({ #parameter tree setup
-            "temperature": { # ALL TEMP pins
+        # Create a PSCUSolo instance
+        self.pscu = PSCUSolo()
+        # Setup Parameter Tree
+        self.param_tree = ParameterTree({
+            "temperature": {  # ALL TEMP pins
                 "healthy": (lambda: self.pscu.temp_healthy, None),
                 "latched": (lambda: self.pscu.temp_latched, None),
                 "sensors": [
@@ -36,19 +47,19 @@ class PSCUSoloController():
                     }
                 ],
             },
-            "humidity": { #ALL HUMID pins
-                "healthy": (lambda: self.pscu.humid_healthy,None),
+            "humidity": {
+                "healthy": (lambda: self.pscu.humid_healthy, None),
                 "latched": (lambda: self.pscu.humid_latched, None),
                 "sensors": [
                     {
                         "sensor_name": "Internal",
                         "trip_over": (lambda: self.pscu.humid_trip_over, None),
                         "value": (lambda: self.pscu.humidity, None),
-                        "setpoint_over": (lambda: self.pscu.humid_sp , None),
+                        "setpoint_over": (lambda: self.pscu.humid_sp, None),
                     },
                 ]
             },
-            "leak": { #ALL LEAK pins
+            "leak": {
                 "healthy": (lambda: self.pscu.leak_healthy, None),
                 "latched": (lambda: self.pscu.leak_latched, None),
                 "sensors": [
@@ -61,7 +72,7 @@ class PSCUSoloController():
                     },
                 ]
             },
-            "pump": { # ALL PUMP pins
+            "pump": {
                 "latched": (lambda: self.pscu.pump_latched, None),
                 "healthy": (lambda: self.pscu.pump_healthy, None),
                 "sensors": [
@@ -76,21 +87,20 @@ class PSCUSoloController():
             "tripped": (lambda: self.pscu.tripped, None),
         })
 
-        self.update_task = PeriodicCallback( #loop the do-update function every 250ms
+        self.update_task = PeriodicCallback(  # loop do-update every 250ms
             self.do_update, 250
         )
         self.update_task.start()
 
-    def get(self, path): #when a get command is called update parameter tree
-
+    def get(self, path):
+        """Update the parameter tree when a get command is called."""
         return self.param_tree.get(path)
 
-    def set(self, path, data): #when a set command is called update parameter tree
+    def set(self, path, data):
+        """Update the parameter tree when a set command is called."""
         self.param_tree.set(path, data)
         return self.param_tree.get(path)
 
-    def do_update(self): # runs the update method found in the PSCUSolo class
+    def do_update(self):
+        """Run the update method from PSCUsolo.py."""
         self.pscu.update()
-
-
-

@@ -1,51 +1,70 @@
+"""PSCUSolo - interface class for the PSCUSolo device.
+
+This class implements the interface to the hardware components of
+the LPD PSCUsolo controller.
+
+Harvey Wornham, STFC Detector Systems Software Group
+
+"""
+
 from odin_devices.i2c_device import I2CDevice
 from odin_devices.tca9548 import TCA9548
+
 from odin_devices.ad5593r import AD5593R
 from odin_devices.mcp23008 import MCP23008
 
-def temp1_adc(adc_val):
 
+def temp1_adc(adc_val):
+    """Calculate temp1 value from ADC chip."""
     temp1 = ((adc_val / 4095.)*218.75 - 66.875)
     return temp1
 
-def temp1_raw_adc(adc_val):
 
+def temp1_raw_adc(adc_val):
+    """Calculate temp1 raw value from ADC chip."""
     temp1 = (adc_val / 4095.)
     return temp1
 
-def temp2_adc(adc_val):
 
+def temp2_adc(adc_val):
+    """Calculate temp2 value from ADC chip."""
     temp2 = ((adc_val / 4095.)*1000 - 273.15)
     return temp2
 
-def temp2_raw_adc(adc_val):
 
+def temp2_raw_adc(adc_val):
+    """Calculate temp2 raw value from ADC chip."""
     temp2 = (adc_val / 4095.)
     return temp2
 
-def humid_adc(adc_val):
 
+def humid_adc(adc_val):
+    """Calculate humidity value from ADC chip."""
     humid = ((adc_val / 4095.)*125.0) - 12.5
     return humid
 
-def humid_raw_adc(adc_val):
 
+def humid_raw_adc(adc_val):
+    """Calculate humidity raw value from ADC chip."""
     humid = (adc_val / 4095.)
     return humid
 
-def leak_adc(adc_val):
 
-    leak = ((adc_val / 4095.)*5)/ 150e-3
+def leak_adc(adc_val):
+    """Calculate leak value from ADC chip."""
+    leak = ((adc_val / 4095.)*5) / 150e-3
     return leak
 
+
 class PSCUSolo():
+    """Create class that deffines all IO pins and updates them."""
 
     ADC_PINS = {
         "leak_value": (0, 0),
         "temp1_value": (0, 2),
         "humidity_value": (0, 3),
         "temp2_value": (0, 6),
-        "temp1_sp_under": (1 , 2),
+        "temp1_sp_under": (1, 2),
         "temp1_sp_over": (1, 3),
         "humidity_sp": (1, 4),
         "temp2_sp_over": (1, 5),
@@ -80,13 +99,13 @@ class PSCUSolo():
     }
 
     def __init__(self):
-
+        """Initailises all the: pins, boolean values and standard values."""
         I2CDevice.set_default_i2c_bus(2)
 
         self.tca = TCA9548(address=0x70)
 
         self.adc = []
-        for addr in [0x10 , 0x11]:
+        for addr in [0x10, 0x11]:
             self.adc.append(self.tca.attach_device(4, AD5593R, addr))
 
         self.adc[0].setup_adc(0x4d)
@@ -147,20 +166,22 @@ class PSCUSolo():
         self.update()
 
     def read_adc(self, adc_name):
+        """Will read a corresponding ADC pin after a value and index is given."""
         (adc_idx, pin) = self.ADC_PINS[adc_name]
         return self.adc[adc_idx].read_adc(pin)
 
     def read_gpio(self, gpio_name):
-
+        """Will read a corresponding GPIO pin after a value and index is given."""
         (mcp_idx, pin) = self.INPUT_PINS[gpio_name]
         return self.mcp[mcp_idx].input(pin)
 
     def write_gpio(self, gpio_name, value):
-        (mcp_idx , pin) = self.OUTPUT_PINS[gpio_name]
+        """Will write a corresponding GPIO pin after a value and index is given."""
+        (mcp_idx, pin) = self.OUTPUT_PINS[gpio_name]
         self.mcp[mcp_idx].output(pin, value)
 
     def update(self):
-
+        """Will update all of the values taken from the IO pins."""
         self.armed = self.read_gpio("armed")
         self.tripped = not self.read_gpio("tripped")
 
@@ -170,14 +191,14 @@ class PSCUSolo():
         self.update_pump()
 
     def update_temp(self):
-
+        """Will pdate all of the basic temp values."""
         self.temp_healthy = self.read_gpio("temp_healthy")
         self.temp_latched = not self.read_gpio("temp_latched")
         self.update_temp1()
         self.update_temp2()
 
     def update_temp1(self):
-
+        """Will update all of the internal temp values."""
         adc_val = self.read_adc("temp1_value")
         self.temp1 = temp1_adc(adc_val)
         self.temp1_raw = temp1_raw_adc(adc_val)
@@ -191,7 +212,7 @@ class PSCUSolo():
         self.temp1_sp_over_raw = temp1_raw_adc(adc_val)
 
     def update_temp2(self):
-
+        """Will update all of the coolant temp values."""
         adc_val = self.read_adc("temp2_value")
         self.temp2 = temp2_adc(adc_val)
         self.temp2_raw = temp2_raw_adc(adc_val)
@@ -205,7 +226,7 @@ class PSCUSolo():
         self.temp2_sp_over_raw = temp2_raw_adc(adc_val)
 
     def update_humid(self):
-
+        """Will update all of the humidity values."""
         adc_val = self.read_adc("humidity_value")
         self.humidity = humid_adc(adc_val)
         self.humid_raw = humid_raw_adc(adc_val)
@@ -217,7 +238,7 @@ class PSCUSolo():
         self.humid_latched = not self.read_gpio("humid_latched")
 
     def update_leak(self):
-
+        """Will update all of the leak values."""
         self.leak = leak_adc(self.read_adc("leak_value"))
         self.leak_sp = leak_adc(self.read_adc("leak_sp"))
         self.leak_healthy = self.read_gpio("leak_healthy")
@@ -226,26 +247,16 @@ class PSCUSolo():
         self.leak_trace = self.read_gpio("leak_trace")
 
     def update_pump(self):
-
+        """Will update  all of the pump states."""
         self.pump_healthy = self.read_gpio("pump_healthy")
         self.pump_trip = self.read_gpio("pump_trip")
         self.pump_latched = not self.read_gpio("pump_latched")
 
     def set_armed(self, arm):
-
+        """Will update all of the arming states."""
         pin = "arm" if arm else "disarm"
         self.write_gpio(pin, MCP23008.LOW)
         self.write_gpio(pin, MCP23008.HIGH)
         self.write_gpio(pin, MCP23008.LOW)
 
         self.armed = self.read_gpio("armed")
-
-
-
-
-
-
-
-
-
-
