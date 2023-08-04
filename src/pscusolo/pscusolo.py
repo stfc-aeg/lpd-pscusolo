@@ -122,7 +122,10 @@ class PSCUSolo():
             self.mcp[mcp_idx].setup(pin, MCP23008.OUT)
 
         self.armed = False
+        self.overall = False
+        self.latched = False
 
+        self.temp_healthy = False
         self.temp_latched = False
 
         self.temp1 = 0.0
@@ -184,6 +187,12 @@ class PSCUSolo():
         """Will update all of the values taken from the IO pins."""
         self.armed = self.read_gpio("armed")
         self.tripped = not self.read_gpio("tripped")
+        self.overall = (
+            self.temp_healthy and self.humid_healthy and self.leak_healthy and self.pump_healthy
+        )
+        self.latched = (
+            self.temp_latched or self.humid_latched or self.leak_latched or self.pump_latched
+        )
 
         self.update_temp()
         self.update_humid()

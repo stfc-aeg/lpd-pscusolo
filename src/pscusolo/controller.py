@@ -25,7 +25,9 @@ class PSCUSoloController():
         self.pscu = PSCUSolo()
         # Setup Parameter Tree
         self.param_tree = ParameterTree({
-            "temperature": {  # ALL TEMP pins
+            "overall": (lambda: self.pscu.overall, None),
+            "latched": (lambda: self.pscu.latched, None),
+            "temperature": {
                 "healthy": (lambda: self.pscu.temp_healthy, None),
                 "latched": (lambda: self.pscu.temp_latched, None),
                 "sensors": [

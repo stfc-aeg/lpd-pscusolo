@@ -332,6 +332,8 @@ $(document).ready(function() {
 
     global_elems.set("p-tripped", document.querySelector('#p-tripped'));
 
+    global_elems.set("overall-status", document.querySelector("#overall-status"));
+    global_elems.set("overall-latched", document.querySelector("#overall-latched"));
     global_elems.set("overall-tripped", document.querySelector("#overall-tripped"));
     global_elems.set("overall-armed", document.querySelector("#overall-armed"));
     global_elems.set("arm", document.querySelector("#button-arm"));
@@ -371,8 +373,10 @@ function updateAll()
               leak_sensors[i].update(response.leak.sensors[i]);
 
         //Handle overall status
-        update_status_box(global_elems.get("overall-tripped"), !response.tripped, 'No', 'Yes')
-        update_status_box(global_elems.get("overall-armed"), response.armed, 'Yes', 'No')
+        update_status_box(global_elems.get("overall-status"), response.overall, 'Healthy', 'Error');
+        update_status_box(global_elems.get("overall-latched"), !response.latched, 'No', 'Yes');
+        update_status_box(global_elems.get("overall-tripped"), !response.tripped, 'No', 'Yes');
+        update_status_box(global_elems.get("overall-armed"), response.armed, 'Yes', 'No');
 
         // Handle health states
         update_status_box(global_elems.get("tmp-health"), response.temperature.healthy, 'Healthy', 'Error');
