@@ -27,6 +27,8 @@ class PSCUSoloController():
         self.param_tree = ParameterTree({
             "overall": (lambda: self.pscu.overall, None),
             "latched": (lambda: self.pscu.latched, None),
+            "armed": (lambda: self.pscu.armed, self.pscu.set_armed),
+            "tripped": (lambda: self.pscu.tripped, None),
             "temperature": {
                 "healthy": (lambda: self.pscu.temp_healthy, None),
                 "latched": (lambda: self.pscu.temp_latched, None),
@@ -83,15 +85,22 @@ class PSCUSoloController():
                         "pump_trip": (lambda: self.pscu.pump_trip, None),
                     }
                 ]
-
             },
-            "armed": (lambda: self.pscu.armed, self.pscu.set_armed),
-            "tripped": (lambda: self.pscu.tripped, None),
+            "fans": {
+                "sensors": [
+                    {
+                        "sensor_name": "Fan 1",
+                        "value": (lambda: self.pscu.fans[0].rpm_5, None),
+                    },
+                    {
+                        "sensor_name": "Fan 2",
+                        "value": (lambda: self.pscu.fans[1].rpm_5, None),
+                    },
+                ]
+            }
         })
 
-        self.update_task = PeriodicCallback(  # loop do-update every 250ms
-            self.do_update, 250
-        )
+        self.update_task = PeriodicCallback(self.do_update, 250)
         self.update_task.start()
 
     def get(self, path):
