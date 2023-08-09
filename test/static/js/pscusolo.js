@@ -299,7 +299,7 @@ var pscusolo_html = "";
 
 pscusolo_html += generateTempSensors(2);
 pscusolo_html += generateHumiditySensors(1);
-pscusolo_html += generateLeakSensors(1)
+pscusolo_html += generateLeakSensors(1);
 pscusolo_html += generatePumpSensors(1);
 
 $("#pscusolo").html(pscusolo_html);
@@ -307,6 +307,7 @@ $("#pscusolo").html(pscusolo_html);
 var temp_sensors = [];
 var humidity_sensors = [];
 var leak_sensors = [];
+var fan_sensors = []
 var pump_sensor;
 
 var global_elems = new Map();
@@ -317,7 +318,8 @@ $(document).ready(function() {
         temp_sensors.push(new TempSensor(i));
     for(var i = 0; i < 1; ++i)
         humidity_sensors.push(new HumiditySensor(i));
-        for(var i = 0; i < 1; ++i)
+
+    for(var i = 0; i < 1; ++i)
         leak_sensors.push(new LeakSensor(i));
 
     pump_sensor = new PumpSensor(0);
@@ -336,9 +338,9 @@ $(document).ready(function() {
     global_elems.set("overall-latched", document.querySelector("#overall-latched"));
     global_elems.set("overall-tripped", document.querySelector("#overall-tripped"));
     global_elems.set("overall-armed", document.querySelector("#overall-armed"));
+    global_elems.set("overall-fan1", document.querySelector("#overall-fan1"));
+    global_elems.set("overall-fan2", document.querySelector("#overall-fan2"));
     global_elems.set("arm", document.querySelector("#button-arm"));
-
-
 
     //Start update function
     setInterval(updateAll, 500);
@@ -369,14 +371,20 @@ function updateAll()
         for(var i = 0; i < humidity_sensors.length; ++i)
             humidity_sensors[i].update(response.humidity.sensors[i]);
 
-         for(var i = 0; i < leak_sensors.length; ++i)
-              leak_sensors[i].update(response.leak.sensors[i]);
+        for(var i = 0; i < leak_sensors.length; ++i)
+            leak_sensors[i].update(response.leak.sensors[i]);
+
+        for(var i = 0; i < fan_sensors.length; ++i)
+            fan_sensors[i].update(response.fans.sensors[i])
 
         //Handle overall status
         update_status_box(global_elems.get("overall-status"), response.overall, 'Healthy', 'Error');
         update_status_box(global_elems.get("overall-latched"), !response.latched, 'No', 'Yes');
         update_status_box(global_elems.get("overall-tripped"), !response.tripped, 'No', 'Yes');
         update_status_box(global_elems.get("overall-armed"), response.armed, 'Yes', 'No');
+
+        global_elems.get("overall-fan1").innerHTML = response.fans.sensors[0].value + "&nbsp;rpm";
+        global_elems.get("overall-fan2").innerHTML = response.fans.sensors[1].value + "&nbsp;rpm";
 
         // Handle health states
         update_status_box(global_elems.get("tmp-health"), response.temperature.healthy, 'Healthy', 'Error');

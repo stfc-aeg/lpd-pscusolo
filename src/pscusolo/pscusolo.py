@@ -6,6 +6,7 @@ the LPD PSCUsolo controller.
 Harvey Wornham, STFC Detector Systems Software Group
 
 """
+import time
 
 from odin_devices.i2c_device import I2CDevice
 from odin_devices.tca9548 import TCA9548
@@ -13,6 +14,7 @@ from odin_devices.tca9548 import TCA9548
 from odin_devices.ad5593r import AD5593R
 from odin_devices.mcp23008 import MCP23008
 
+from pscusolo.gpio_fan_speed import GpioFanSpeed
 
 def temp1_adc(adc_val):
     """Calculate temp1 value from ADC chip."""
@@ -121,6 +123,13 @@ class PSCUSolo():
         for (pin_name, (mcp_idx, pin)) in self.OUTPUT_PINS.items():
             self.mcp[mcp_idx].setup(pin, MCP23008.OUT)
 
+        self.fans = [
+            GpioFanSpeed("P8_18", "P8_16"),
+            GpioFanSpeed("P8_12", "P8_15"),
+        ]
+        self.fan_update_downscale = 4
+        self.fan_update_counter = 0
+
         self.armed = False
         self.overall = False
         self.latched = False
@@ -198,6 +207,7 @@ class PSCUSolo():
         self.update_humid()
         self.update_leak()
         self.update_pump()
+        self.update_fans()
 
     def update_temp(self):
         """Will pdate all of the basic temp values."""
@@ -269,3 +279,11 @@ class PSCUSolo():
         self.write_gpio(pin, MCP23008.LOW)
 
         self.armed = self.read_gpio("armed")
+
+    def update_fans(self):
+
+        if (self.fan_update_counter % self.fan_update_downscale) == 0:
+            for fan in self.fans:
+                fan.update()
+
+        self.fan_update_counter += 1
