@@ -136,6 +136,12 @@
           - python3-smbus
       tags: [package,python]
 
+    - name: Install virtualenv via pip
+      ansible.builtin.pip:
+        name: virtualenv
+        state: latest
+      tags: python
+
     - name: Create pscu software directory
       ansible.builtin.file:
         path: "{{ pscu_sw_dir }}"
@@ -154,23 +160,23 @@
         state: directory
       tags: app
 
-    # - name: Install pscu package into virtualenv
-    #   ansible.builtin.pip:
-    #     name: "git+{{ pscu_repo_url }}.git@{{ pscu_release }}#egg=lpdpower&subdirectory=control"
-    #     virtualenv: "{{ pscu_install_dir}}"
-    #     editable: yes
-    #   become: yes
-    #   become_user: "{{ pscu_user }}"
-    #   tags: app
+    - name: Install pscu package into virtualenv
+      ansible.builtin.pip:
+        name: "git+{{ pscu_repo_url }}.git@{{ pscu_release }}#egg=pscusolo&subdirectory=control"
+        virtualenv: "{{ pscu_install_dir}}"
+        editable: yes
+      become: yes
+      become_user: "{{ pscu_user }}"
+      tags: app
 
-    # - name: Install pscu app from Github release
-    #   ansible.builtin.unarchive:
-    #     src: "{{ pscu_repo_url }}/releases/download/{{ pscu_release }}/app_build.tgz"
-    #     dest: "{{ pscu_install_dir}}"
-    #     remote_src: yes
-    #     owner: "{{ pscu_user }}"
-    #     group: "{{ pscu_group }}"
-    #   tags: app
+    - name: Install pscu static resources from Github release
+      ansible.builtin.unarchive:
+        src: "{{ pscu_repo_url }}/releases/download/{{ pscu_release }}/static.tgz"
+        dest: "{{ pscu_install_dir}}"
+        remote_src: yes
+        owner: "{{ pscu_user }}"
+        group: "{{ pscu_group }}"
+      tags: app
 
     - name: Create config directory for odin-control
       ansible.builtin.file:
