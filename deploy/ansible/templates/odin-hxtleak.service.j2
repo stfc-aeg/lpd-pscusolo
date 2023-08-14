@@ -1,0 +1,12 @@
+[Unit]
+Description=XFEL LPD PSCUsolo odin-control server
+After=multi-user.target
+
+[Service]
+Type=simple
+User=root
+Group={{ pscu_group }}
+ExecStart={{ hxt_install_dir }}/bin/odin_control --config {{ pscu_install_dir }}/config/pscusolo.cfg
+
+[Install]
+WantedBy=default.target

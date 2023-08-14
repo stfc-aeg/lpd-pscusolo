@@ -1,0 +1,248 @@
+---
+#
+# Ansible playbook for deploying the LPD solo power supply control unit (PSCUsolo) system to a
+# BeagleBone Black
+#
+
+- hosts: pscu_bbb
+  remote_user: root
+
+  tasks:
+
+    - name: Check if reboot required
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+        get_md5: no
+      register: reboot_required
+      changed_when: false
+
+    - name: print message if reboot required
+      ansible.builtin.debug:
+        msg: "Reboot is required"
+      when: reboot_required.stat.exists
+
+    - name: Set hostname
+      ansible.builtin.hostname:
+        name: "{{ hostname }}"
+      when: hostname is defined
+      tags: system
+
+    - name: Set timezone
+      ansible.builtin.file:
+        src: /usr/share/zoneinfo/{{ timezone }}
+        dest: /etc/localtime
+        state: link
+      when: timezone is defined
+      notify: Reconfigure timezone data
+      tags: system
+
+    - name: Disabled unwanted services
+      ansible.builtin.service:
+        name: "{{ item }}"
+        state: stopped
+        enabled: false
+      with_items:
+        - wpa_supplicant
+        - bonescript-autorun
+        - nginx
+      tags: system
+
+    - name: Suppress SSHD login banner
+      ansible.builtin.replace:
+        path: /etc/ssh/sshd_config
+        regexp: '^(Banner.*)'
+        replace: '#\1'
+      notify: Restart sshd
+      tags: system
+
+    - name: Suppress SSHD motd
+      ansible.builtin.replace:
+        path: /etc/pam.d/sshd
+        regexp: '^(session\s+optional\s+pam_motd.so.*)'
+        replace: '#\1'
+      notify: Restart sshd
+      tags: system
+
+    - name: Create pscu group
+      ansible.builtin.group:
+        name: "{{ pscu_group }}"
+        gid: 1001
+        state: present
+      tags: user
+
+    - name: Create user account
+      ansible.builtin.user:
+        name: "{{ pscu_user }}"
+        uid: 1001
+        group: "{{ pscu_group }}"
+        password: $6$CgYMe3nPmqPx1rbw$VMBejJFdcZSAE6TLXYqiLOsV0afpXGKUOnHNUwVZGaf18d4Ia0THctXeM5lFfSZ1fGGDoxpwRXPD6OQhPyqUG.
+        update_password: on_create
+        shell: /bin/bash
+      tags: user
+
+    - name: Add user account to required system groups
+      ansible.builtin.user:
+        name: "{{ pscu_user }}"
+        append: yes
+        groups:
+          - adm
+          - kmem
+          - dialout
+          - cdrom
+          - floppy
+          - audio
+          - dip
+          - video
+          - plugdev
+          - users
+          - systemd-journal
+          - bluetooth
+          - netdev
+          - i2c
+          - gpio
+          - pwm
+          - eqep
+          - remoteproc
+          - admin
+          - spi
+          - iio
+          - docker
+          - tisdk
+          - weston-launch
+          - xenomai
+      tags: user
+
+    - name: Remove default debian account
+      ansible.builtin.user:
+        name: debian
+        state: absent
+        remove: yes
+      tags: system
+
+    - name: Install general packages
+      ansible.builtin.package:
+        state: present
+        name:
+          - nfs-common
+      tags: package
+
+    - name: Install python 3 packages
+      ansible.builtin.package:
+        state: present
+        name:
+          - python3
+          - python3-pip
+          - python3-virtualenv
+          - python3-smbus
+      tags: [package,python]
+
+    - name: Create pscu software directory
+      ansible.builtin.file:
+        path: "{{ pscu_sw_dir }}"
+        owner: "{{ pscu_user }}"
+        group: "{{ pscu_group }}"
+        mode: u=rwx,g=rwx,o=rx
+        state: directory
+      tags: app
+
+    - name: Create install directory for application
+      ansible.builtin.file:
+        path: "{{ pscu_install_dir }}"
+        owner: "{{ pscu_user }}"
+        group: "{{ pscu_group }}"
+        mode: u=rwx,g=rwx,o=rx
+        state: directory
+      tags: app
+
+    # - name: Install pscu package into virtualenv
+    #   ansible.builtin.pip:
+    #     name: "git+{{ pscu_repo_url }}.git@{{ pscu_release }}#egg=lpdpower&subdirectory=control"
+    #     virtualenv: "{{ pscu_install_dir}}"
+    #     editable: yes
+    #   become: yes
+    #   become_user: "{{ pscu_user }}"
+    #   tags: app
+
+    # - name: Install pscu app from Github release
+    #   ansible.builtin.unarchive:
+    #     src: "{{ pscu_repo_url }}/releases/download/{{ pscu_release }}/app_build.tgz"
+    #     dest: "{{ pscu_install_dir}}"
+    #     remote_src: yes
+    #     owner: "{{ pscu_user }}"
+    #     group: "{{ pscu_group }}"
+    #   tags: app
+
+    - name: Create config directory for odin-control
+      ansible.builtin.file:
+        path: "{{ pscu_install_dir }}/config"
+        owner: "{{ pscu_user }}"
+        group: "{{ pscu_group }}"
+        mode: u=rwx,g=rwx,o=rx
+        state: directory
+      tags: app
+
+    - name: Install configuration file for pscu odin-control server
+      ansible.builtin.template:
+        src: templates/pscusolo.cfg.j2
+        dest: "{{ pscu_install_dir }}/config/pscusolo.cfg"
+        owner: "{{ pscu_user }}"
+        group: "{{ pscu_group }}"
+      notify: Restart odin-pscusolo service
+      tags: [app,service]
+
+    # - name: Install systemd service unit for pscu odin-control server
+    #   ansible.builtin.template:
+    #     src: templates/odin-pscusolo.service.j2
+    #     dest: /etc/systemd/system/odin-pscusolo.service
+    #   notify: Restart odin-pscusolo service
+    #   tags: [app,service]
+
+    # - name: Enable pscu service in systemd
+    #   ansible.builtin.service:
+    #     name: odin-pscusolo.service
+    #     enabled: true
+    #   notify: Restart odin-pscusolo service
+    #   tags: [app,service]
+
+    - name: Create temptfs entries in fstab
+      ansible.posix.mount:
+        src: tmpfs
+        path: "{{ item.path }}"
+        fstype: tmpfs
+        opts: "defaults,noatime,nosuid,mode={{ item.mode }},size={{ item.size }}"
+        state: present
+      loop:
+        - { path: '/var/log', mode: '1777', size: '128M' }
+        - { path: '/var/lib/dhcp', mode: '1777', size: '1M' }
+        - { path: '/var/lib/sudo', mode: '0700', size: '1M' }
+        - { path: '/var/lib/systemd', mode: '0755', size: '1M' }
+        - { path: '/var/lib/logrotate', mode: '0755', size: '1M' }
+        - { path: '/var/tmp', mode: '1777', size: '1M' }
+        - { path: '/tmp', mode: '1777', size: '32M' }
+      tags: fstab
+
+    - name : Set rootfs read-only in fstab
+      ansible.posix.mount:
+        src: "{{ ansible_mounts|json_query('[?mount == `/`].device')|first }}"
+        path: /
+        fstype: "{{ ansible_mounts|json_query('[?mount == `/`].fstype')|first }}"
+        opts: "ro,noatime,errors=remount-ro"
+        state: present
+      tags: fstab
+
+  handlers:
+
+    - name: Reconfigure timezone data
+      ansible.builtin.command:
+        cmd: dpkg-reconfigure -f noninteractive tzdata
+
+    - name: Restart sshd
+      ansible.builtin.service:
+        name: sshd.service
+        state: restarted
+
+    - name: Restart odin-pscusolo service
+      ansible.builtin.service:
+        name: odin-pscusolo.service
+        daemon_reload: true
+        state: restarted
