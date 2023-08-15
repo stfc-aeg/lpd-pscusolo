@@ -196,19 +196,19 @@
       notify: Restart odin-pscusolo service
       tags: [app,service]
 
-    # - name: Install systemd service unit for pscu odin-control server
-    #   ansible.builtin.template:
-    #     src: templates/odin-pscusolo.service.j2
-    #     dest: /etc/systemd/system/odin-pscusolo.service
-    #   notify: Restart odin-pscusolo service
-    #   tags: [app,service]
+    - name: Install systemd service unit for pscu odin-control server
+      ansible.builtin.template:
+        src: templates/odin-pscusolo.service.j2
+        dest: /etc/systemd/system/odin-pscusolo.service
+      notify: Restart odin-pscusolo service
+      tags: [app,service]
 
-    # - name: Enable pscu service in systemd
-    #   ansible.builtin.service:
-    #     name: odin-pscusolo.service
-    #     enabled: true
-    #   notify: Restart odin-pscusolo service
-    #   tags: [app,service]
+    - name: Enable pscu service in systemd
+      ansible.builtin.service:
+        name: odin-pscusolo.service
+        enabled: true
+      notify: Restart odin-pscusolo service
+      tags: [app,service]
 
     - name: Create temptfs entries in fstab
       ansible.posix.mount:
