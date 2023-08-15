@@ -6,7 +6,7 @@ After=multi-user.target
 Type=simple
 User=root
 Group={{ pscu_group }}
-ExecStart={{ hxt_install_dir }}/bin/odin_control --config {{ pscu_install_dir }}/config/pscusolo.cfg
+ExecStart={{ pscu_install_dir }}/bin/odin_control --config {{ pscu_install_dir }}/config/pscusolo.cfg
 
 [Install]
 WantedBy=default.target
