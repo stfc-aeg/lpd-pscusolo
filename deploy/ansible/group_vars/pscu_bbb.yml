@@ -1,0 +1,9 @@
+---
+ansible_python_interpreter: /usr/bin/python3
+timezone: Europe/London
+pscu_group: pscu
+pscu_user: pscu
+pscu_sw_dir: /pscu_sw
+pscu_install_dir: "{{ pscu_sw_dir }}/install"
+pscu_repo_url: https://github.com/stfc-aeg/odin-pscusolo
+pscu_release: "0.1.0"

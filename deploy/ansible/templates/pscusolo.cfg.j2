@@ -1,0 +1,14 @@
+[server]
+debug_mode = 1
+http_port  = 80
+http_addr  = 0.0.0.0
+static_path = {{ pscu_install_dir }}/static
+adapters   = pscusolo
+enable_cors = true
+
+[tornado]
+logging = info
+
+[adapter.pscusolo]
+module = pscusolo.adapter.PSCUSoloAdapter
+
