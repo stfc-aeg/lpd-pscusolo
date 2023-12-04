@@ -19,10 +19,11 @@ class PSCUSoloController():
 
     def __init__(self):
         """Initalises the logging.debug command."""
-        logging.debug("initalising PSCUsolo control unit ")
+        logging.debug("Initalising PSCU solo controller")
 
         # Create a PSCUSolo instance
         self.pscu = PSCUSolo()
+
         # Setup Parameter Tree
         self.param_tree = ParameterTree({
             "overall": (lambda: self.pscu.overall, None),

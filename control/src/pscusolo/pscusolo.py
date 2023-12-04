@@ -6,6 +6,7 @@ the LPD PSCUsolo controller.
 Harvey Wornham, STFC Detector Systems Software Group
 
 """
+import math
 import time
 
 from odin_devices.i2c_device import I2CDevice
@@ -30,7 +31,11 @@ def temp1_raw_adc(adc_val):
 
 def temp2_adc(adc_val):
     """Calculate temp2 value from ADC chip."""
-    temp2 = ((adc_val / 4095.)*1000 - 273.15)
+    a = 1.039e-3
+    b = 2.354e-4
+    c = 1.939e-7
+    r = (40950000.0 / adc_val) - 10000
+    temp2 = (1.0 / (a + b * math.log(r) + c * (math.log(r)**3))) - 273.15
     return temp2
 
 
