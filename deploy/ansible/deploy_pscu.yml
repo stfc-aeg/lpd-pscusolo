@@ -75,7 +75,7 @@
         name: "{{ pscu_user }}"
         uid: 1001
         group: "{{ pscu_group }}"
-        password: $6$CgYMe3nPmqPx1rbw$VMBejJFdcZSAE6TLXYqiLOsV0afpXGKUOnHNUwVZGaf18d4Ia0THctXeM5lFfSZ1fGGDoxpwRXPD6OQhPyqUG.
+        password: $6$FBvjDVc0qC6hi.jO$GZwlEhq35LDgw3xafab5jCDF56dDwKi22jcl3LqX3C2m1vcMGpExAIa8AjN9MEY5GQfr7HXmHGv/lxY0a/rDr.
         update_password: on_create
         shell: /bin/bash
       tags: user
