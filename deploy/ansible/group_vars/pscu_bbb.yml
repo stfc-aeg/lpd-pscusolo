@@ -6,4 +6,4 @@ pscu_user: pscu
 pscu_sw_dir: /pscu_sw
 pscu_install_dir: "{{ pscu_sw_dir }}/install"
 pscu_repo_url: https://github.com/stfc-aeg/odin-pscusolo
-pscu_release: "1.0.0"
+pscu_release: "1.1.0"
