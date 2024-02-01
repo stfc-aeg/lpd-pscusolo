@@ -43,7 +43,6 @@
         enabled: false
       with_items:
         - wpa_supplicant
-        - bonescript-autorun
         - nginx
       tags: system
 
@@ -96,20 +95,16 @@
           - plugdev
           - users
           - systemd-journal
+          - input
+          - render
           - bluetooth
           - netdev
           - i2c
-          - gpio
-          - pwm
-          - eqep
-          - remoteproc
-          - admin
-          - spi
-          - iio
-          - docker
-          - tisdk
+          - cloud9ide
           - weston-launch
-          - xenomai
+          - tisdk
+          - admin
+          - gpio
       tags: user
 
     - name: Remove default debian account
@@ -132,7 +127,6 @@
         name:
           - python3
           - python3-pip
-          - python3-virtualenv
           - python3-smbus
       tags: [package,python]
 
@@ -165,6 +159,7 @@
         name: "git+{{ pscu_repo_url }}.git@{{ pscu_release }}#egg=pscusolo&subdirectory=control"
         virtualenv: "{{ pscu_install_dir}}"
         editable: yes
+        virtualenv_site_packages: true
       become: yes
       become_user: "{{ pscu_user }}"
       tags: app
